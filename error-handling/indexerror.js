@@ -2,9 +2,9 @@ const express = require(`express`);
 const app = express();
 
 app.get(`/getError`, (req, res, next) => {
-    next(Error(`Error Massage`))
+    next(Error(`Error Massage`));
 });
-
+    
 
 app.use((err, req, res, next) => {
     console.log(err.stack);
