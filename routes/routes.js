@@ -1,32 +1,46 @@
-const router = require(`express`).Router();
-//const { nameModel } = require("../db");
+const router = require("express").Router();
+const { peopleModel } = require("../db");
 
 //router.get("/getAllNames", (req, res) => namesModel.find({}).then(results => res.send(results)).catch(err => next(err)));
-let names = ["ED", "DM", "GI", "RP", "SM", "DH"];
+//const names = ["ED", "DM", "GI", "RP", "SM", "DH"];
 
-router.get(`/`, (req, res) => res.send("Hello World!"));
 
-router.get(`/getAll`, (req, res) => res.send(names));
+router.get(`/getAll`, (req, res) => peopleModel.find({}).then(results => res.send(results)).catch(err => next(err)));
 
-router.get(`/get/:id`, (req, res) => res.send(names[req.params.id]));
-
-router.delete(`/delete/:id`, (req, res) => {
-    res.send(names.splice(req.params.id, 1));
+router.get(`/get/:id`, (req, res, next) => {
+    const { id } = req.params;
+    peopleModel.findById(id)
 });
 
-router.post("/create", (req, res,next) => {
-    const name = req.body.name;
+const deleteMiddleware = (req, res, next) => {
+    console.log("deleting input");
+    next();
+}
+
+router.delete("/delete/:id", deleteMiddleware, (req, res, next) => {
+    const { id } = req.params;
+    console.log("ID:", id);
+    peopleModel.findByIdAndDelete(id).then(result => res.send(result)).catch(err => next(err));
+});
+
+router.post("/create", async (req, res, next) => {
     if (!req.body.name) return next({ status: 400, message: "New name not provided" });
-    names.push(req.body.name);
-    res.status(201).send(names[names.length -1]);
+    try {
+        const result = await peopleModel.create(req.body);
+        res.status(201).send(result);
+    } catch (err) {
+        return next(err);
+    }
 });
 
-router.put(`/replace/:id`, (req, res) => {
-    const name = req.query.name;
-    const index = req.params.id;
-    const old = names[index];
-    names[req.params.id] = name;
-    res.status(202).send(`${old} successfully replaced with ${name}`);
+router.patch("/update/:id", async (req, res, next) => {
+    try {
+        await peopleModel.findByIdAndUpdate(req.params.id, req.query)
+        const newName = await peopleModel.findById(req.params.id);
+        res.send(newName);
+    } catch (err) {
+        return next(err);
+    }
 });
 
 module.exports = router;
