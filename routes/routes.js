@@ -7,9 +7,14 @@ const { peopleModel } = require("../db");
 
 router.get(`/getAll`, (req, res) => peopleModel.find({}).then(results => res.send(results)).catch(err => next(err)));
 
-router.get(`/get/:id`, (req, res, next) => {
+router.get(`/get/:id`, async (req, res, next) => {
     const { id } = req.params;
-    peopleModel.findById(id)
+    try {
+        const result = await peopleModel.findById(id);
+        res.send(result);
+    } catch (err) {
+        return next(err);
+    }
 });
 
 const deleteMiddleware = (req, res, next) => {
